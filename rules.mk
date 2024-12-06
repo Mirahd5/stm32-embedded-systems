@@ -173,7 +173,7 @@ libopencm3 $(LIBDEPS):
 define board-cmd # 1:ext 2:mode 3:redir
 %.$1: %.elf
 	@printf "  FLASH\t$$<\n"
-	$$(Q)$$(RULESDIR)/devtools/board-run -p "$$(realpath $$(*).elf)" -m $2 -o binary=$$(OOCD) \
+	$$(Q)$$(RULESDIR)/devtools/board-run -p "$$<" -m $2 -o binary=$$(OOCD) \
 		$$(if $$(OOCD_FILE),\
 			-f $$(OOCD_FILE) \
 		,\
@@ -183,7 +183,7 @@ define board-cmd # 1:ext 2:mode 3:redir
 		$3
 endef
 
-$(eval $(call board-cmd,flash,flash,$(NULL)))
+$(eval $(call board-cmd,flash,flash,-q))
 $(eval $(call board-cmd,gdb,gdb,))
 $(eval $(call board-cmd,ddd,ddd,))
 

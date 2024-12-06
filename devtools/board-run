@@ -17,6 +17,7 @@ OPTIONS:
   --gdb|-g OPT        Option passed to gdb
   --ddd|-d OPT        Option passed to ddd
   --dry-run|-n        Just print the command, do not run it
+  --quiet|-q          Less output
   [options]           Option for invoked program
 
 Note: when OPT is binary=PROG, then PROG is used to invoke openocd, gdb or ddd
@@ -35,9 +36,9 @@ declare -a OPT_OPENOCD OPT_GDB OPT_DDD OPT_OTHER
 TMPPROG=
 
 do-exit() {
-	if [ -n "$TMPPROG" ]; then
-		rm -rf "$TMPPROG" || true
-	fi
+    if [ -n "$TMPPROG" ]; then
+	rm -rf "$TMPPROG" || true
+    fi
 }
 
 trap do-exit EXIT
@@ -124,6 +125,14 @@ run-flash() {
 	-c "program $BIN verify reset exit"
 }
 
+filter-flash() {
+    if ! $QUIET; then
+	cat
+    else
+	grep -E '^(Running:|[*][*])'
+    fi
+}
+
 prepare-gdb() {
     if [ -z "$GDB_BIN" ]; then
 	if command -v arm-none-eabi-gdb >/dev/null; then
@@ -163,12 +172,17 @@ run-ddd() {
     run --final "$DDD_BIN" "${OPT_DDD[@]}" --debugger "$0 --mode gdb --gdbslave" "$BIN"
 }
 
+check-path() {
+    if [ "$1" != "$(echo "$1" | tr -dc 'a-zA-Z0-9_./-' )" ]; then
+	error "Invalid characters in '$1'"
+    fi
+}
 
 main-opt() {
     while [ $# != 0 ]; do
 	case "$1" in
             -h|--help) usage ; exit 0 ;;
-	    --program|-p) BIN="$2" ; shift ;;
+	    --program|-p) check-path "$2" ; BIN="$2" ; shift ;;
 	    --file|-f) handle-opt OPENOCD --file "$2" ; shift ;;
 	    --openocd|-o) handle-opt OPENOCD "$2" ; shift ;;
 	    --gdb|-g) handle-opt GDB "$2" ; shift ;;
@@ -179,6 +193,7 @@ main-opt() {
 		       shift ;;
 	    --dry-run|-n) DRYRUN=true ;;
 	    --gdbslave) GDBSLAVE=true ;;
+	    --quiet|-q) QUIET=true ;;
             --) shift
 		handle-opt "" "$@"
 		break ;;
@@ -190,6 +205,7 @@ main-opt() {
 
 MODE=
 DRYRUN=false
+QUIET=false
 main-opt "$@"
 if [ -z "$MODE" ]; then
     main-opt --mode flash --
@@ -203,7 +219,7 @@ fi
 case "$MODE" in
     flash|load)
 	prepare-flash
-	run-flash ;;
+	run-flash |& filter-flash ;;
     gdb)
 	prepare-flash
 	prepare-gdb

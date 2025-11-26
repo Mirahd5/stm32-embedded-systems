@@ -18,7 +18,13 @@ void init_LD2(void) {
     GPIOA_PUPDR &= 0xFFFFF3FF;
 }
 
-void init_PB(void) { /* GPIOC_MODER = ... */ }
+void init_PB(void) {
+    RCC_AHB1ENR |= RCC_AHB1ENR_IOPCEN; 
+    GPIOC_MODER =
+        (GPIOC_MODER & ~GPIO_MODE_MASK(13)) | GPIO_MODE(13, GPIO_MODE_INPUT);
+    GPIOC_PUPDR =
+        (GPIOC_PUPDR & ~GPIO_PUPD_MASK(13)) | GPIO_PUPD(13, GPIO_PUPD_NONE);
+ }
 
 /* Ne pas optimiser cette fonction : on dépend du nombre
  * approximatif d'instructions qu'elle exécute
@@ -58,6 +64,11 @@ char _getc(void) {
 }
 
 int main(void) {
+
+    init_LD2();
+    init_PB();
+
+
     printf("\e[2J\e[1;1H\r\n");
     printf("\e[01;32m*** Welcome to Nucleo F446 ! ***\e[00m\r\n");
 
@@ -68,8 +79,44 @@ int main(void) {
     printf("APB1CLK= %9lu Hz\r\n", get_APB1CLK());
     printf("APB2CLK= %9lu Hz\r\n", get_APB2CLK());
     printf("\r\n");
-
-    while (1)
-        ;
+    /*
+    while (1){
+        if (!(GPIOC_IDR & GPIO13))
+            GPIOA_BSRR = GPIO5;           //led on
+        else 
+            GPIOA_BSRR = GPIO5<<16;        // LED off
+    }
     return 0;
+    */
+    /*
+    while (1){
+        GPIOA_BSRR = GPIO5;          //led on
+        tempo_500ms();
+        GPIOA_BSRR = GPIO5<<16;        // LED off
+            tempo_500ms();
+    }
+    
+    return 0;
+    */
+    /*
+    while (1){
+        if ((GPIOC_IDR & GPIO13)){
+            GPIOA_BSRR = GPIO5; 
+            tempo_500ms();
+            tempo_500ms();
+            tempo_500ms();
+            tempo_500ms();
+            GPIOA_BSRR = GPIO5<<16;          //led CLIGNOTE
+            tempo_500ms();
+            tempo_500ms();
+            tempo_500ms();
+            tempo_500ms();
+        }
+        else 
+            GPIOA_BSRR = GPIO5;        // LED on
+    }
+    return 0;
+    
+    */
+
 }

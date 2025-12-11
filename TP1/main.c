@@ -59,15 +59,32 @@ void _puts(const char *c) {
 }
 
 char _getc(void) {
-    /* À compléter */
-    return 0;
+    while((USART2_SR & 0x20)==0);
+    return USART2_DR;
+}
+
+void _gets(char* string,int taille) {
+    int i=0;
+    char c;
+    while(1){
+        c=_getc();
+        if(c==0x0D){
+            string[i]='\0';
+            return;
+        }
+        if (i<taille -1){
+            string[i++]=c;
+        }
+    }
+    string[i]='\0';
+
 }
 
 int main(void) {
 
     init_LD2();
     init_PB();
-
+    init_USART();
 
     printf("\e[2J\e[1;1H\r\n");
     printf("\e[01;32m*** Welcome to Nucleo F446 ! ***\e[00m\r\n");
@@ -118,5 +135,30 @@ int main(void) {
     return 0;
     
     */
+    /*Usart 1
+        _putc('L');
+        _putc('Y');
+        _putc('N');
+        _putc('N');
+        _putc(0x0A);
+        _putc(0x0D);
+        _putc('M');
+        _putc('I');
+        _putc('R');
+        _putc('A');D);
+    */
+    /*
+        char c = _getc();
+        _putc(c);
+        _putc(0x0A);
+        _putc(0x0D);
+
+    */
+        char string[100];
+        _gets(string,100);
+        _puts(string);
+        _putc(0x0A);
+        _putc(0x0D);
+
 
 }
